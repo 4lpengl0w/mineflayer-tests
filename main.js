@@ -78,7 +78,7 @@ client.on('messageCreate', async (message) => {
       const entry = botMap.get(name);
       if (!entry || !entry.bot) continue;
       try {
-        await cmdModule.execute(entry.bot, message, args);
+        cmdModule.execute(entry.bot, message, args);
       } catch (e) {
         console.error('Error executing command for', name, e);
       }
