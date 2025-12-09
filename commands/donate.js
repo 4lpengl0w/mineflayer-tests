@@ -23,7 +23,7 @@ module.exports = {
 
     async function findAnchor() {
       try {
-        const anchorId = bot.registry.blocksByName.lime_shulker_block.id;
+        const anchorId = bot.registry.blocksByName.lime_shulker_box.id;
         const block = bot.findBlock({
           matching: anchorId,
           maxDistance: 2,
