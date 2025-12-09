@@ -19,6 +19,7 @@ with sync_playwright() as p:
     offset = timedelta(hours=1)
 
     for page_int in range(PAGE_START, PAGE_END):
+        timestr = None
         if not TAG:
             rn -= offset
             timestr = rn.strftime("%Y%m%dT%H%M%S") + "Z"
