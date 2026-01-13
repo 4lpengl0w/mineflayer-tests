@@ -86,15 +86,24 @@ client.on('clientReady', async () => {
 
 client.on('messageCreate', async (message) => {
   if (message.author.bot) return;
-  if (message.channel.parentId !== DISCORD_CATEGORY_ID) return;
 
-  // find bot entry for this channel
-  const botEntry = Array.from(botMap.values()).find(entry => entry.channel && entry.channel.id === message.channel.id);
+  // 1. Modified check: Allow if it's in the category OR if it's a thread in the chat channel
+  const isInCategory = message.channel.parentId === DISCORD_CATEGORY_ID;
+  const isInThread = message.channel.isThread() && message.channel.parentId === config.DISCORD_CHAT_ID;
+
+  if (!isInCategory && !isInThread) return;
+
+  // 2. Find bot entry for this channel OR thread
+  const botEntry = Array.from(botMap.values()).find(entry => 
+    entry.channel && entry.channel.id === message.channel.id
+  );
+  
   if (!botEntry) return;
 
   const content = message.content.trim();
 
-  if (content.startsWith('/')) bot.chat(content);
+  // Use botEntry.bot instead of the undefined 'bot' variable found in the original code
+  if (content.startsWith('/')) botEntry.bot.chat(content);
 
   if (!content.startsWith('!')) return;
 
@@ -113,7 +122,7 @@ client.on('messageCreate', async (message) => {
       const entry = botMap.get(name);
       if (!entry || !entry.bot) continue;
       try {
-        cmdModule.execute(entry.bot, message, args);
+        await cmdModule.execute(entry.bot, message, args);
       } catch (e) {
         console.error('Error executing command for', name, e);
       }
