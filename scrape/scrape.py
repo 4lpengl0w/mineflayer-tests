@@ -1,11 +1,26 @@
 from patchright.sync_api import sync_playwright
 from datetime import datetime, timedelta, timezone
+from argparse import ArgumentParser
 
-PAGE_START = 6
-PAGE_END = 7
+parser = ArgumentParser(description="NameMC Scraper")
 
-MODE = "names" # skins, names
-TAG = "" # "", trending, new
+parser.add_argument("--mode", choices=["skins", "names"], default="names", help="Scrape skins or names")
+parser.add_argument("--tag", default="", help="Tag for skins (e.g., 'trending', 'new'). Only used if mode is 'skins'")
+parser.add_argument("--start", type=int, default=6, help="Starting page number")
+parser.add_argument("--end", type=int, default=7, help="Ending page number")
+parser.add_argument("--output", help="File to save usernames to (optional)")
+parser.add_argument("--limit", type=int, default=0, help="Max number of items to scrape (0 for no limit)")
+
+args = parser.parse_args()
+
+PAGE_START = args.start
+PAGE_END = args.end
+LIMIT = args.limit
+MODE = args.mode
+TAG = args.tag if MODE == "skins" else ""
+OUTPUT_FILE = args.output
+
+if LIMIT: PAGE_END = 99999999
 
 usernames = []
 
@@ -19,6 +34,7 @@ with sync_playwright() as p:
     offset = timedelta(hours=1)
 
     for page_int in range(PAGE_START, PAGE_END):
+        if LIMIT > 0 and len(usernames) >= LIMIT: break
         timestr = None
         if not TAG:
             rn -= offset
@@ -29,6 +45,7 @@ with sync_playwright() as p:
 
         spans = page.locator(selector).all()
         for i, span in enumerate(spans):
+            if LIMIT > 0 and len(usernames) >= LIMIT: break
             text = span.text_content()
             if text != "—": usernames.append(text)
     
