@@ -3,7 +3,7 @@ const { goals: { GoalBlock } } = require('mineflayer-pathfinder');
 module.exports = {
   name: 'donate',
   async execute(bot, message, args) {
-    const targetPos = new GoalBlock(-739.5, 55, -732.5);
+    const targetPos = new GoalBlock(-8.7, 73, 70);
     const maxRetries = 5;
     const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -23,7 +23,7 @@ module.exports = {
 
     async function findAnchor() {
       try {
-        const anchorId = bot.registry.blocksByName.lime_shulker_box.id;
+        const anchorId = bot.registry.blocksByName.respawn_anchor.id;
         const block = bot.findBlock({
           matching: anchorId,
           maxDistance: 2,

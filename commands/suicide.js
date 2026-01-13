@@ -5,7 +5,7 @@ module.exports = {
   async execute(bot, message, args) {
     try {
       if (!global.runLoops) global.runLoops = new Map();
-      const target = { x: -708, y: 29, z: -782 };
+      const target = { x: 0, y: 16, z: 52 };
       const goal = new GoalBlock(target.x, target.y, target.z);
       const shouldLoop = args[0]?.toLowerCase() === 'loop';
 
