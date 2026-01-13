@@ -53,3 +53,9 @@ with sync_playwright() as p:
 
 print("usernames: ")
 for username in usernames: print(username)
+
+NL = "\n"
+
+if OUTPUT_FILE:
+    with open(OUTPUT_FILE, "w") as file:
+        for username in usernames: file.write(f"{username}{NL}")
