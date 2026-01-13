@@ -26,8 +26,22 @@ async function getBotChannel(username) {
   const guild = client.guilds.cache.first();
   if (!guild) return null;
   const channelName = username.toLowerCase().replace(/[^a-z0-9-]/g, '-');
+  
+  // 1. Check the cache first
   let channel = guild.channels.cache.find(c => c.parentId === DISCORD_CATEGORY_ID && c.name === channelName && c.type === 0);
   if (channel) return channel;
+
+  // 2. If not in cache, fetch all channels from Discord to be sure
+  try {
+    await guild.channels.fetch(); 
+    // Check cache again after fetching
+    channel = guild.channels.cache.find(c => c.parentId === DISCORD_CATEGORY_ID && c.name === channelName && c.type === 0);
+    if (channel) return channel;
+  } catch (e) {
+    console.error('Failed to fetch channels to check for duplicates:', e.message);
+  }
+
+  // 3. Only create if it truly doesn't exist
   try {
     channel = await guild.channels.create({
       name: channelName,
