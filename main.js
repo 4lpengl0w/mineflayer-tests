@@ -24,31 +24,54 @@ global.discordClient = client;
 
 // In main.js
 
+// In main.js
+
 async function getBotChannel(username) {
+  // Use DISCORD_CHAT_ID as the "Host" channel where threads will live
+  const hostChannelId = config.DISCORD_CHAT_ID; 
   const guild = client.guilds.cache.first();
   if (!guild) return null;
 
-  // FIX: Added '_' to the allowed characters list in the regex
-  // This prevents underscores from being turned into hyphens, which caused mismatches
-  const channelName = username.toLowerCase().replace(/[^a-z0-9-_]/g, '-');
-  
-  let channel = guild.channels.cache.find(c => c.parentId === DISCORD_CATEGORY_ID && c.name === channelName && c.type === 0);
-  if (channel) return channel;
-  
-  try {
-    // Optional: Fetch channels to ensure cache is up to date (prevents duplicates if cache is stale)
-    await guild.channels.fetch();
-    channel = guild.channels.cache.find(c => c.parentId === DISCORD_CATEGORY_ID && c.name === channelName && c.type === 0);
-    if (channel) return channel;
+  const hostChannel = guild.channels.cache.get(hostChannelId) || await guild.channels.fetch(hostChannelId).catch(() => null);
+  if (!hostChannel) {
+    console.error('[CRITICAL] Host channel for threads not found. Check DISCORD_CHAT_ID.');
+    return null;
+  }
 
-    channel = await guild.channels.create({
-      name: channelName,
-      type: 0,
-      parent: DISCORD_CATEGORY_ID
+  // Discord threads allow underscores, but for consistency we'll keep the name clean
+  const threadName = username; 
+
+  // 1. Look for an existing active or archived thread
+  try {
+    // Check active threads in cache
+    let thread = hostChannel.threads.cache.find(t => t.name === threadName);
+    
+    // If not in cache, fetch all active threads from Discord
+    if (!thread) {
+      const activeThreads = await hostChannel.threads.fetch();
+      thread = activeThreads.threads.find(t => t.name === threadName);
+    }
+
+    // If still not found, check archived threads
+    if (!thread) {
+      const archivedThreads = await hostChannel.threads.fetchArchived();
+      thread = archivedThreads.threads.find(t => t.name === threadName);
+      if (thread) await thread.setArchived(false); // Unarchive if found
+    }
+
+    if (thread) return thread;
+
+    // 2. Create a new thread if it doesn't exist
+    // 'GUILD_PUBLIC_THREAD' is for public threads (Type 11)
+    thread = await hostChannel.threads.create({
+      name: threadName,
+      autoArchiveDuration: 1440, // 24 hours
+      reason: `Bot console for ${username}`,
     });
-    return channel;
+
+    return thread;
   } catch (e) {
-    console.error('Failed to create channel', e.message);
+    console.error('Failed to get/create thread:', e.message);
     return null;
   }
 }
